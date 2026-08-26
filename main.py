@@ -76,7 +76,7 @@ async def feishu_events(request: Request):
     message = event.get("message") or {}
     chat_id = message.get("chat_id")
     chat_type = message.get("chat_type", "p2p")
-    msg_type = message.get("msg_type")
+    msg_type = message.get("message_type") or message.get("msg_type")
     content = message.get("content")  # JSON 字符串
 
     if msg_type == "text" and chat_id:
