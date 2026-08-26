@@ -60,7 +60,8 @@ async def feishu_events(request: Request):
     if header.get("event_type") == "url_verification":
         if header.get("token") != VERIFICATION_TOKEN:
             raise HTTPException(status_code=403, detail="Invalid token")
-        return JSONResponse({"challenge": (body.get("event") or {}).get("challenge")})
+        challenge = body.get("challenge") or (body.get("event") or {}).get("challenge")
+        return JSONResponse({"challenge": challenge})
 
     # 事件回调校验 token
     if token and token != VERIFICATION_TOKEN:
