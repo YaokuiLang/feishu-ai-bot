@@ -76,6 +76,7 @@ async def feishu_events(request: Request):
     message = event.get("message") or {}
     chat_id = message.get("chat_id")
     chat_type = message.get("chat_type", "p2p")
+    sender_open_id = (event.get("sender") or {}).get("sender_id", {}).get("open_id")
     msg_type = message.get("message_type") or message.get("msg_type")
     content = message.get("content")  # JSON 字符串
 
@@ -90,7 +91,11 @@ async def feishu_events(request: Request):
                 return {"code": 0}
         if text.strip():
             reply = call_model(text)
-            send_message(chat_id, reply)
+            # 私聊按用户 open_id 回复；群聊仍按 chat_id 发送。
+            if chat_type == "p2p" and sender_open_id:
+                send_message(sender_open_id, reply, "open_id")
+            else:
+                send_message(chat_id, reply, "chat_id")
     return {"code": 0}
 
 
@@ -115,17 +120,17 @@ def call_model(prompt):
         return f"调用模型失败: {str(e)}"
 
 
-def send_message(chat_id, text):
+def send_message(receive_id, text, receive_id_type):
     """通过飞书消息 API 发送文本消息"""
     access_token = get_tenant_access_token()
     url = "https://open.feishu.cn/open-apis/im/v1/messages"
-    params = {"receive_id_type": "chat_id"}
+    params = {"receive_id_type": receive_id_type}
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json"
     }
     payload = {
-        "receive_id": chat_id,
+        "receive_id": receive_id,
         "msg_type": "text",
         "content": json.dumps({"text": text}, ensure_ascii=False)
     }
