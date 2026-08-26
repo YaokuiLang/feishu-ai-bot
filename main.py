@@ -135,3 +135,8 @@ def send_message(chat_id, text):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
+
+
+@app.get("/")
+async def root():
+    return {"status": "ok", "service": "feishu-ai-bot"}
